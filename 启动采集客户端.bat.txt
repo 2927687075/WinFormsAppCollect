@@ -1,0 +1,70 @@
+@echo off
+:: 移除有问题的 mshta 调用，改用更稳定的方式
+if "%1" == "h" goto begin
+
+:: 使用 PowerShell 替代 mshta 实现隐藏窗口（更稳定）
+powershell -WindowStyle Hidden -Command "& '%~0' h"
+exit
+
+:begin
+
+title WinFormsAppCollect.exe 监控器
+color 0A
+set "exePath=E:\C#\WinFormsAppCollect\bin\Debug\WinFormsAppCollect.exe"
+set checkInterval=10
+
+:: 设置开机自启动
+call :SetAutoStart
+
+:: 开机自启动时等待更长时间
+if "%1"=="autostart" (
+    echo 开机自启动，等待系统准备...
+    timeout /t 60
+)
+
+:: 检查文件是否存在
+if not exist "%exePath%" (
+    echo 错误: 文件不存在: %exePath%
+    echo 请检查路径是否正确
+    pause
+    exit
+)
+
+echo 监控程序启动: %exePath%
+
+:monitor
+tasklist | find "WinFormsAppCollect.exe" > nul
+if %errorlevel% == 0 (
+    echo %time% - 运行中
+    timeout /t %checkInterval% > nul
+    goto monitor
+) else (
+    echo %time% - 启动程序
+    start "" "%exePath%"
+    timeout /t 5 > nul
+    goto monitor
+)
+
+:SetAutoStart
+:: 设置开机自启动注册表项
+set "regKey=HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+set "regName=WinFormsAppCollect_Monitor"
+set "regValue=%~dpnx0 autostart"
+
+echo 设置开机自启动...
+reg add "%regKey%" /v "%regName%" /t REG_SZ /d "%regValue%" /f > nul 2>&1
+
+if %errorlevel% == 0 (
+    echo [?] 开机自启动设置成功
+) else (
+    echo [?] 开机自启动设置失败，尝试管理员权限...
+    
+    :: 尝试使用管理员权限设置
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "%regName%" /t REG_SZ /d "%regValue%" /f > nul 2>&1
+    if %errorlevel% == 0 (
+        echo  系统级开机自启动设置成功
+    ) else (
+        echo  自启动设置失败，请以管理员身份运行
+    )
+)
+goto :eof

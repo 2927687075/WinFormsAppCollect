@@ -256,6 +256,7 @@ namespace WinFormsAppCollect
                     }
                     else
                     {
+
                         // 如果已经在UI线程上，直接访问
                         functionCode = cmbFunctionCode.SelectedItem?.ToString();
                     }

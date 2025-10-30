@@ -1,0 +1,30 @@
+@echo off
+title 停止所有采集客户端的相关进程
+color 0C
+echo ========================================
+echo   强力停止 WinFormsAppCollect 所有进程
+echo ========================================
+echo.
+
+echo 正在停止进程，请稍候...
+echo.
+
+:: 停止监控程序
+taskkill /f /im cmd.exe /fi "windowtitle eq WinFormsAppCollect.exe*" > nul 2>&1
+echo [?] 监控程序已停止
+
+:: 停止主程序
+taskkill /f /im WinFormsAppCollect.exe > nul 2>&1
+echo [?] 主程序已停止
+
+:: 额外清理可能残留的进程
+taskkill /f /fi "windowtitle eq WinFormsAppCollect.exe*" > nul 2>&1
+echo [?] 清理残留进程
+
+echo.
+echo ========================================
+echo   所有进程已停止
+echo ========================================
+echo.
+echo 3秒后自动退出...
+timeout /t 3 > nul

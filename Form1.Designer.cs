@@ -421,7 +421,7 @@ namespace WinFormsAppCollect
             this.txtInterval.Name = "txtInterval";
             this.txtInterval.Size = new System.Drawing.Size(60, 27);
             this.txtInterval.TabIndex = 9;
-            this.txtInterval.Text = "500";
+            this.txtInterval.Text = "5000";
             // 
             // btnStartContinuousRead
             // 

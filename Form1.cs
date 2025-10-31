@@ -52,18 +52,6 @@ namespace WinFormsAppCollect
             cmbFunctionCode.SelectedIndex = 2;
             cmbFunctionCodeTCP.SelectedIndex = 2;
 
-            // 绑定事件
-            btnConnect.Click += btnConnect_Click;
-            btnDisconnect.Click += btnDisconnect_Click;
-            btnRead.Click += btnRead_Click;
-            btnStartContinuousRead.Click += btnStartContinuousRead_Click;
-            btnStopContinuousRead.Click += btnStopContinuousRead_Click;
-
-            btnConnectTCP.Click += btnConnectTCP_Click;
-            btnDisconnectTCP.Click += btnDisconnectTCP_Click;
-            btnReadTCP.Click += btnReadTCP_Click;
-            btnStartContinuousReadTCP.Click += btnStartContinuousReadTCP_Click;
-            btnStopContinuousReadTCP.Click += btnStopContinuousReadTCP_Click;
         }
 
         private void SetDefaultValues()

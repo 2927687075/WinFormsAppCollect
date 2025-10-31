@@ -148,12 +148,6 @@ namespace WinFormsAppCollect
                 return;
             }
 
-            if (_isReadingContinuously)
-            {
-                MessageBox.Show("已经在循环读取中", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
             StartContinuousRTUReading();
         }
 
@@ -281,7 +275,22 @@ namespace WinFormsAppCollect
                     ushort startAddress = ushort.Parse(txtStartAddressTCP.Text);
                     ushort numberOfPoints = ushort.Parse(txtNumberOfPointsTCP.Text);
 
-                    string functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
+                    string functionCode = null;
+                    // 检查是否需要在UI线程上执行
+                    if (cmbFunctionCodeTCP.InvokeRequired)
+                    {
+                        // 如果需要跨线程访问，使用Invoke在UI线程上执行
+                        cmbFunctionCodeTCP.Invoke(new Action(() =>
+                        {
+                            functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
+                        }));
+                    }
+                    else
+                    {
+
+                        // 如果已经在UI线程上，直接访问
+                        functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
+                    }
                     if (string.IsNullOrEmpty(functionCode))
                     {
                         OnLogMessage("TCP未选择功能码，跳过本次读取。");
@@ -338,12 +347,6 @@ namespace WinFormsAppCollect
                 return;
             }
 
-            if (_isReadingContinuouslyTCP)
-            {
-                MessageBox.Show("TCP已经在循环读取中", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
             StartContinuousTCPReading();
         }
 
@@ -361,7 +364,22 @@ namespace WinFormsAppCollect
                 ushort startAddress = ushort.Parse(txtStartAddress.Text);
                 ushort numberOfPoints = ushort.Parse(txtNumberOfPoints.Text);
 
-                string functionCode = cmbFunctionCode.SelectedItem.ToString();
+                string functionCode = null;
+                // 检查是否需要在UI线程上执行
+                if (cmbFunctionCode.InvokeRequired)
+                {
+                    // 如果需要跨线程访问，使用Invoke在UI线程上执行
+                    cmbFunctionCode.Invoke(new Action(() =>
+                    {
+                        functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                    }));
+                }
+                else
+                {
+
+                    // 如果已经在UI线程上，直接访问
+                    functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                }
                 ReadDataRTU(functionCode, slaveAddress, startAddress, numberOfPoints);
             }
             catch (Exception ex)
@@ -378,7 +396,22 @@ namespace WinFormsAppCollect
                 ushort startAddress = ushort.Parse(txtStartAddressTCP.Text);
                 ushort numberOfPoints = ushort.Parse(txtNumberOfPointsTCP.Text);
 
-                string functionCode = cmbFunctionCodeTCP.SelectedItem.ToString();
+                string functionCode = null;
+                // 检查是否需要在UI线程上执行
+                if (cmbFunctionCode.InvokeRequired)
+                {
+                    // 如果需要跨线程访问，使用Invoke在UI线程上执行
+                    cmbFunctionCode.Invoke(new Action(() =>
+                    {
+                        functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                    }));
+                }
+                else
+                {
+
+                    // 如果已经在UI线程上，直接访问
+                    functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                }
                 ReadDataTCP(functionCode, slaveAddress, startAddress, numberOfPoints);
             }
             catch (Exception ex)
@@ -479,7 +512,22 @@ namespace WinFormsAppCollect
                     ushort startAddress = ushort.Parse(txtStartAddress.Text);
                     ushort numberOfPoints = ushort.Parse(txtNumberOfPoints.Text);
 
-                    string functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                    string functionCode = null;
+                    // 检查是否需要在UI线程上执行
+                    if (cmbFunctionCode.InvokeRequired)
+                    {
+                        // 如果需要跨线程访问，使用Invoke在UI线程上执行
+                        cmbFunctionCode.Invoke(new Action(() =>
+                        {
+                            functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                        }));
+                    }
+                    else
+                    {
+
+                        // 如果已经在UI线程上，直接访问
+                        functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                    }
                     if (string.IsNullOrEmpty(functionCode))
                     {
                         OnLogMessage("RTU未选择功能码，跳过本次读取。");
@@ -573,5 +621,9 @@ namespace WinFormsAppCollect
             }
         }
 
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            txtLog.Clear();
+        }
     }
 }

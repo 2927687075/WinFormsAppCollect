@@ -71,6 +71,7 @@ namespace WinFormsAppCollect
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageRTU = new System.Windows.Forms.TabPage();
             this.groupBoxRTUConfig = new System.Windows.Forms.GroupBox();
+            this.btnClearLog = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.cmbPortName = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -98,13 +99,6 @@ namespace WinFormsAppCollect
             this.btnStopContinuousRead = new System.Windows.Forms.Button();
             this.btnRead = new System.Windows.Forms.Button();
             this.tabPageTCP = new System.Windows.Forms.TabPage();
-            this.groupBoxTCPConfig = new System.Windows.Forms.GroupBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.txtIPAddress = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
-            this.txtPort = new System.Windows.Forms.TextBox();
-            this.btnConnectTCP = new System.Windows.Forms.Button();
-            this.btnDisconnectTCP = new System.Windows.Forms.Button();
             this.groupBoxTCPData = new System.Windows.Forms.GroupBox();
             this.label13 = new System.Windows.Forms.Label();
             this.cmbFunctionCodeTCP = new System.Windows.Forms.ComboBox();
@@ -119,14 +113,21 @@ namespace WinFormsAppCollect
             this.btnStartContinuousReadTCP = new System.Windows.Forms.Button();
             this.btnStopContinuousReadTCP = new System.Windows.Forms.Button();
             this.btnReadTCP = new System.Windows.Forms.Button();
+            this.groupBoxTCPConfig = new System.Windows.Forms.GroupBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.txtIPAddress = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.txtPort = new System.Windows.Forms.TextBox();
+            this.btnConnectTCP = new System.Windows.Forms.Button();
+            this.btnDisconnectTCP = new System.Windows.Forms.Button();
             this.txtLog = new System.Windows.Forms.RichTextBox();
             this.tabControl1.SuspendLayout();
             this.tabPageRTU.SuspendLayout();
             this.groupBoxRTUConfig.SuspendLayout();
             this.groupBoxRTUData.SuspendLayout();
             this.tabPageTCP.SuspendLayout();
-            this.groupBoxTCPConfig.SuspendLayout();
             this.groupBoxTCPData.SuspendLayout();
+            this.groupBoxTCPConfig.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -153,6 +154,7 @@ namespace WinFormsAppCollect
             // groupBoxRTUConfig
             // 
             this.groupBoxRTUConfig.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.groupBoxRTUConfig.Controls.Add(this.btnClearLog);
             this.groupBoxRTUConfig.Controls.Add(this.label1);
             this.groupBoxRTUConfig.Controls.Add(this.cmbPortName);
             this.groupBoxRTUConfig.Controls.Add(this.label2);
@@ -167,10 +169,21 @@ namespace WinFormsAppCollect
             this.groupBoxRTUConfig.Controls.Add(this.btnDisconnect);
             this.groupBoxRTUConfig.Location = new System.Drawing.Point(17, 18);
             this.groupBoxRTUConfig.Name = "groupBoxRTUConfig";
-            this.groupBoxRTUConfig.Size = new System.Drawing.Size(550, 160);
+            this.groupBoxRTUConfig.Size = new System.Drawing.Size(540, 160);
             this.groupBoxRTUConfig.TabIndex = 0;
             this.groupBoxRTUConfig.TabStop = false;
             this.groupBoxRTUConfig.Text = "串口配置";
+            // 
+            // btnClearLog
+            // 
+            this.btnClearLog.BackColor = System.Drawing.Color.White;
+            this.btnClearLog.Location = new System.Drawing.Point(445, 110);
+            this.btnClearLog.Name = "btnClearLog";
+            this.btnClearLog.Size = new System.Drawing.Size(80, 30);
+            this.btnClearLog.TabIndex = 12;
+            this.btnClearLog.Text = "清空报文";
+            this.btnClearLog.UseVisualStyleBackColor = false;
+            this.btnClearLog.Click += new System.EventHandler(this.btnClearLog_Click);
             // 
             // label1
             // 
@@ -277,23 +290,25 @@ namespace WinFormsAppCollect
             // btnConnect
             // 
             this.btnConnect.BackColor = System.Drawing.Color.LightGreen;
-            this.btnConnect.Location = new System.Drawing.Point(290, 110);
+            this.btnConnect.Location = new System.Drawing.Point(266, 110);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(80, 30);
             this.btnConnect.TabIndex = 10;
             this.btnConnect.Text = "连接";
             this.btnConnect.UseVisualStyleBackColor = false;
+            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
             // btnDisconnect
             // 
             this.btnDisconnect.BackColor = System.Drawing.Color.LightCoral;
             this.btnDisconnect.Enabled = false;
-            this.btnDisconnect.Location = new System.Drawing.Point(380, 110);
+            this.btnDisconnect.Location = new System.Drawing.Point(356, 110);
             this.btnDisconnect.Name = "btnDisconnect";
             this.btnDisconnect.Size = new System.Drawing.Size(80, 30);
             this.btnDisconnect.TabIndex = 11;
             this.btnDisconnect.Text = "断开";
             this.btnDisconnect.UseVisualStyleBackColor = false;
+            this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
             // 
             // groupBoxRTUData
             // 
@@ -313,7 +328,7 @@ namespace WinFormsAppCollect
             this.groupBoxRTUData.Controls.Add(this.btnRead);
             this.groupBoxRTUData.Location = new System.Drawing.Point(17, 195);
             this.groupBoxRTUData.Name = "groupBoxRTUData";
-            this.groupBoxRTUData.Size = new System.Drawing.Size(550, 160);
+            this.groupBoxRTUData.Size = new System.Drawing.Size(540, 160);
             this.groupBoxRTUData.TabIndex = 1;
             this.groupBoxRTUData.TabStop = false;
             this.groupBoxRTUData.Text = "数据采集";
@@ -355,7 +370,7 @@ namespace WinFormsAppCollect
             this.txtSlaveAddress.Name = "txtSlaveAddress";
             this.txtSlaveAddress.Size = new System.Drawing.Size(60, 27);
             this.txtSlaveAddress.TabIndex = 3;
-            this.txtSlaveAddress.Text = "1";
+            this.txtSlaveAddress.Text = "2";
             // 
             // label8
             // 
@@ -389,7 +404,7 @@ namespace WinFormsAppCollect
             this.txtNumberOfPoints.Name = "txtNumberOfPoints";
             this.txtNumberOfPoints.Size = new System.Drawing.Size(60, 27);
             this.txtNumberOfPoints.TabIndex = 7;
-            this.txtNumberOfPoints.Text = "10";
+            this.txtNumberOfPoints.Text = "2";
             // 
             // label10
             // 
@@ -417,6 +432,7 @@ namespace WinFormsAppCollect
             this.btnStartContinuousRead.TabIndex = 10;
             this.btnStartContinuousRead.Text = "开始循环读取";
             this.btnStartContinuousRead.UseVisualStyleBackColor = false;
+            this.btnStartContinuousRead.Click += new System.EventHandler(this.btnStartContinuousRead_Click);
             // 
             // btnStopContinuousRead
             // 
@@ -428,6 +444,7 @@ namespace WinFormsAppCollect
             this.btnStopContinuousRead.TabIndex = 11;
             this.btnStopContinuousRead.Text = "停止循环读取";
             this.btnStopContinuousRead.UseVisualStyleBackColor = false;
+            this.btnStopContinuousRead.Click += new System.EventHandler(this.btnStopContinuousRead_Click);
             // 
             // btnRead
             // 
@@ -438,6 +455,7 @@ namespace WinFormsAppCollect
             this.btnRead.TabIndex = 12;
             this.btnRead.Text = "读取数据";
             this.btnRead.UseVisualStyleBackColor = false;
+            this.btnRead.Click += new System.EventHandler(this.btnRead_Click);
             // 
             // tabPageTCP
             // 
@@ -449,77 +467,6 @@ namespace WinFormsAppCollect
             this.tabPageTCP.Size = new System.Drawing.Size(1168, 367);
             this.tabPageTCP.TabIndex = 1;
             this.tabPageTCP.Text = "Modbus TCP";
-            // 
-            // groupBoxTCPConfig
-            // 
-            this.groupBoxTCPConfig.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.groupBoxTCPConfig.Controls.Add(this.label11);
-            this.groupBoxTCPConfig.Controls.Add(this.txtIPAddress);
-            this.groupBoxTCPConfig.Controls.Add(this.label12);
-            this.groupBoxTCPConfig.Controls.Add(this.txtPort);
-            this.groupBoxTCPConfig.Controls.Add(this.btnConnectTCP);
-            this.groupBoxTCPConfig.Controls.Add(this.btnDisconnectTCP);
-            this.groupBoxTCPConfig.Location = new System.Drawing.Point(17, 15);
-            this.groupBoxTCPConfig.Name = "groupBoxTCPConfig";
-            this.groupBoxTCPConfig.Size = new System.Drawing.Size(550, 160);
-            this.groupBoxTCPConfig.TabIndex = 0;
-            this.groupBoxTCPConfig.TabStop = false;
-            this.groupBoxTCPConfig.Text = "TCP配置";
-            // 
-            // label11
-            // 
-            this.label11.Location = new System.Drawing.Point(20, 30);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(80, 20);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "IP地址:";
-            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtIPAddress
-            // 
-            this.txtIPAddress.Location = new System.Drawing.Point(100, 30);
-            this.txtIPAddress.Name = "txtIPAddress";
-            this.txtIPAddress.Size = new System.Drawing.Size(150, 27);
-            this.txtIPAddress.TabIndex = 1;
-            this.txtIPAddress.Text = "127.0.0.1";
-            // 
-            // label12
-            // 
-            this.label12.Location = new System.Drawing.Point(20, 70);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(80, 20);
-            this.label12.TabIndex = 2;
-            this.label12.Text = "端口号:";
-            this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtPort
-            // 
-            this.txtPort.Location = new System.Drawing.Point(100, 70);
-            this.txtPort.Name = "txtPort";
-            this.txtPort.Size = new System.Drawing.Size(150, 27);
-            this.txtPort.TabIndex = 3;
-            this.txtPort.Text = "10502";
-            // 
-            // btnConnectTCP
-            // 
-            this.btnConnectTCP.BackColor = System.Drawing.Color.LightGreen;
-            this.btnConnectTCP.Location = new System.Drawing.Point(270, 30);
-            this.btnConnectTCP.Name = "btnConnectTCP";
-            this.btnConnectTCP.Size = new System.Drawing.Size(80, 30);
-            this.btnConnectTCP.TabIndex = 4;
-            this.btnConnectTCP.Text = "连接";
-            this.btnConnectTCP.UseVisualStyleBackColor = false;
-            // 
-            // btnDisconnectTCP
-            // 
-            this.btnDisconnectTCP.BackColor = System.Drawing.Color.LightCoral;
-            this.btnDisconnectTCP.Enabled = false;
-            this.btnDisconnectTCP.Location = new System.Drawing.Point(270, 70);
-            this.btnDisconnectTCP.Name = "btnDisconnectTCP";
-            this.btnDisconnectTCP.Size = new System.Drawing.Size(80, 30);
-            this.btnDisconnectTCP.TabIndex = 5;
-            this.btnDisconnectTCP.Text = "断开";
-            this.btnDisconnectTCP.UseVisualStyleBackColor = false;
             // 
             // groupBoxTCPData
             // 
@@ -537,7 +484,7 @@ namespace WinFormsAppCollect
             this.groupBoxTCPData.Controls.Add(this.btnStartContinuousReadTCP);
             this.groupBoxTCPData.Controls.Add(this.btnStopContinuousReadTCP);
             this.groupBoxTCPData.Controls.Add(this.btnReadTCP);
-            this.groupBoxTCPData.Location = new System.Drawing.Point(17, 191);
+            this.groupBoxTCPData.Location = new System.Drawing.Point(17, 195);
             this.groupBoxTCPData.Name = "groupBoxTCPData";
             this.groupBoxTCPData.Size = new System.Drawing.Size(550, 160);
             this.groupBoxTCPData.TabIndex = 1;
@@ -615,7 +562,7 @@ namespace WinFormsAppCollect
             this.txtNumberOfPointsTCP.Name = "txtNumberOfPointsTCP";
             this.txtNumberOfPointsTCP.Size = new System.Drawing.Size(60, 27);
             this.txtNumberOfPointsTCP.TabIndex = 7;
-            this.txtNumberOfPointsTCP.Text = "10";
+            this.txtNumberOfPointsTCP.Text = "2";
             // 
             // label17
             // 
@@ -643,6 +590,7 @@ namespace WinFormsAppCollect
             this.btnStartContinuousReadTCP.TabIndex = 10;
             this.btnStartContinuousReadTCP.Text = "开始循环读取";
             this.btnStartContinuousReadTCP.UseVisualStyleBackColor = false;
+            this.btnStartContinuousReadTCP.Click += new System.EventHandler(this.btnStartContinuousReadTCP_Click);
             // 
             // btnStopContinuousReadTCP
             // 
@@ -654,6 +602,7 @@ namespace WinFormsAppCollect
             this.btnStopContinuousReadTCP.TabIndex = 11;
             this.btnStopContinuousReadTCP.Text = "停止循环读取";
             this.btnStopContinuousReadTCP.UseVisualStyleBackColor = false;
+            this.btnStopContinuousReadTCP.Click += new System.EventHandler(this.btnStopContinuousReadTCP_Click);
             // 
             // btnReadTCP
             // 
@@ -664,6 +613,78 @@ namespace WinFormsAppCollect
             this.btnReadTCP.TabIndex = 12;
             this.btnReadTCP.Text = "读取数据";
             this.btnReadTCP.UseVisualStyleBackColor = false;
+            this.btnReadTCP.Click += new System.EventHandler(this.btnReadTCP_Click);
+            // 
+            // groupBoxTCPConfig
+            // 
+            this.groupBoxTCPConfig.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.groupBoxTCPConfig.Controls.Add(this.label11);
+            this.groupBoxTCPConfig.Controls.Add(this.txtIPAddress);
+            this.groupBoxTCPConfig.Controls.Add(this.label12);
+            this.groupBoxTCPConfig.Controls.Add(this.txtPort);
+            this.groupBoxTCPConfig.Controls.Add(this.btnConnectTCP);
+            this.groupBoxTCPConfig.Controls.Add(this.btnDisconnectTCP);
+            this.groupBoxTCPConfig.Location = new System.Drawing.Point(17, 18);
+            this.groupBoxTCPConfig.Name = "groupBoxTCPConfig";
+            this.groupBoxTCPConfig.Size = new System.Drawing.Size(550, 160);
+            this.groupBoxTCPConfig.TabIndex = 0;
+            this.groupBoxTCPConfig.TabStop = false;
+            this.groupBoxTCPConfig.Text = "TCP配置";
+            // 
+            // label11
+            // 
+            this.label11.Location = new System.Drawing.Point(20, 30);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(80, 20);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "IP地址:";
+            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtIPAddress
+            // 
+            this.txtIPAddress.Location = new System.Drawing.Point(100, 30);
+            this.txtIPAddress.Name = "txtIPAddress";
+            this.txtIPAddress.Size = new System.Drawing.Size(150, 27);
+            this.txtIPAddress.TabIndex = 1;
+            this.txtIPAddress.Text = "127.0.0.1";
+            // 
+            // label12
+            // 
+            this.label12.Location = new System.Drawing.Point(20, 70);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(80, 20);
+            this.label12.TabIndex = 2;
+            this.label12.Text = "端口号:";
+            this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtPort
+            // 
+            this.txtPort.Location = new System.Drawing.Point(100, 70);
+            this.txtPort.Name = "txtPort";
+            this.txtPort.Size = new System.Drawing.Size(150, 27);
+            this.txtPort.TabIndex = 3;
+            this.txtPort.Text = "10502";
+            // 
+            // btnConnectTCP
+            // 
+            this.btnConnectTCP.BackColor = System.Drawing.Color.LightGreen;
+            this.btnConnectTCP.Location = new System.Drawing.Point(270, 30);
+            this.btnConnectTCP.Name = "btnConnectTCP";
+            this.btnConnectTCP.Size = new System.Drawing.Size(80, 30);
+            this.btnConnectTCP.TabIndex = 4;
+            this.btnConnectTCP.Text = "连接";
+            this.btnConnectTCP.UseVisualStyleBackColor = false;
+            // 
+            // btnDisconnectTCP
+            // 
+            this.btnDisconnectTCP.BackColor = System.Drawing.Color.LightCoral;
+            this.btnDisconnectTCP.Enabled = false;
+            this.btnDisconnectTCP.Location = new System.Drawing.Point(270, 70);
+            this.btnDisconnectTCP.Name = "btnDisconnectTCP";
+            this.btnDisconnectTCP.Size = new System.Drawing.Size(80, 30);
+            this.btnDisconnectTCP.TabIndex = 5;
+            this.btnDisconnectTCP.Text = "断开";
+            this.btnDisconnectTCP.UseVisualStyleBackColor = false;
             // 
             // txtLog
             // 
@@ -691,12 +712,14 @@ namespace WinFormsAppCollect
             this.groupBoxRTUData.ResumeLayout(false);
             this.groupBoxRTUData.PerformLayout();
             this.tabPageTCP.ResumeLayout(false);
-            this.groupBoxTCPConfig.ResumeLayout(false);
-            this.groupBoxTCPConfig.PerformLayout();
             this.groupBoxTCPData.ResumeLayout(false);
             this.groupBoxTCPData.PerformLayout();
+            this.groupBoxTCPConfig.ResumeLayout(false);
+            this.groupBoxTCPConfig.PerformLayout();
             this.ResumeLayout(false);
 
         }
+
+        private Button  btnClearLog;
     }
 }

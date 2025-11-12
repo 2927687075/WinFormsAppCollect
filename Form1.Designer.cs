@@ -55,7 +55,24 @@ namespace WinFormsAppCollect
         private Label label1, label2, label3, label4, label5;
         private Label label6, label7, label8, label9, label10;
         private Label label11, label12, label13, label14, label15;
-        private Label label16, label17, label18, label19, label20;
+        private Label label16, label17, label18, label19, label20, label21;
+
+        // 在控件声明区域添加OPC UA控件
+        private TabPage tabPageOPC;
+        private GroupBox groupBoxOPCConfig;
+        private TextBox txtServerUrl;
+        private Button btnConnectOPC;
+        private Button btnDisconnectOPC;
+        private GroupBox groupBoxOPCData;
+        private TextBox txtNodeId;
+        private TextBox txtIntervalOPC;
+        private Button btnReadOPC;
+        private Button btnStartContinuousReadOPC;
+        private Button btnStopContinuousReadOPC;
+        private Button btnBrowseOPC;
+        private ComboBox cmbFunctionCodeOPC;
+
+
 
         protected override void Dispose(bool disposing)
         {
@@ -705,7 +722,6 @@ namespace WinFormsAppCollect
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Modbus数据采集器 - RTU/TCP协议支持";
             this.tabControl1.ResumeLayout(false);
             this.tabPageRTU.ResumeLayout(false);
             this.groupBoxRTUConfig.ResumeLayout(false);
@@ -717,6 +733,219 @@ namespace WinFormsAppCollect
             this.groupBoxTCPConfig.ResumeLayout(false);
             this.groupBoxTCPConfig.PerformLayout();
             this.ResumeLayout(false);
+
+            // ========== OPC UA页面初始化 ==========
+            this.tabPageOPC = new System.Windows.Forms.TabPage();
+            this.groupBoxOPCConfig = new System.Windows.Forms.GroupBox();
+            this.btnDisconnectOPC = new System.Windows.Forms.Button();
+            this.btnConnectOPC = new System.Windows.Forms.Button();
+            this.txtServerUrl = new System.Windows.Forms.TextBox();
+            this.label18 = new System.Windows.Forms.Label();
+            this.groupBoxOPCData = new System.Windows.Forms.GroupBox();
+            this.btnBrowseOPC = new System.Windows.Forms.Button();
+            this.btnStopContinuousReadOPC = new System.Windows.Forms.Button();
+            this.btnStartContinuousReadOPC = new System.Windows.Forms.Button();
+            this.btnReadOPC = new System.Windows.Forms.Button();
+            this.txtIntervalOPC = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.txtNodeId = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.cmbFunctionCodeOPC = new System.Windows.Forms.ComboBox();
+            this.label21 = new System.Windows.Forms.Label();
+
+            // 
+            // tabPageOPC
+            // 
+            this.tabPageOPC.BackColor = System.Drawing.Color.White;
+            this.tabPageOPC.Controls.Add(this.groupBoxOPCData);
+            this.tabPageOPC.Controls.Add(this.groupBoxOPCConfig);
+            this.tabPageOPC.Location = new System.Drawing.Point(4, 29);
+            this.tabPageOPC.Name = "tabPageOPC";
+            this.tabPageOPC.Size = new System.Drawing.Size(1168, 367);
+            this.tabPageOPC.TabIndex = 2;
+            this.tabPageOPC.Text = "OPC UA";
+            // 
+            // groupBoxOPCConfig
+            // 
+            this.groupBoxOPCConfig.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.groupBoxOPCConfig.Controls.Add(this.btnDisconnectOPC);
+            this.groupBoxOPCConfig.Controls.Add(this.btnConnectOPC);
+            this.groupBoxOPCConfig.Controls.Add(this.txtServerUrl);
+            this.groupBoxOPCConfig.Controls.Add(this.label18);
+            this.groupBoxOPCConfig.Location = new System.Drawing.Point(17, 18);
+            this.groupBoxOPCConfig.Name = "groupBoxOPCConfig";
+            this.groupBoxOPCConfig.Size = new System.Drawing.Size(540, 160);
+            this.groupBoxOPCConfig.TabIndex = 0;
+            this.groupBoxOPCConfig.TabStop = false;
+            this.groupBoxOPCConfig.Text = "服务器配置";
+            // 
+            // label18
+            // 
+            this.label18.Location = new System.Drawing.Point(20, 30);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(80, 20);
+            this.label18.TabIndex = 0;
+            this.label18.Text = "服务器URL:";
+            this.label18.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtServer极Url
+            // 
+            this.txtServerUrl.Location = new System.Drawing.Point(100, 30);
+            this.txtServerUrl.Name = "txtServerUrl";
+            this.txtServerUrl.Size = new System.Drawing.Size(300, 27);
+            this.txtServerUrl.TabIndex = 1;
+            this.txtServerUrl.Text = "opc.tcp://localhost:4840";
+            // 
+            // btnConnectOPC
+            // 
+            this.btnConnectOPC.BackColor = System.Drawing.Color.LightGreen;
+            this.btnConnectOPC.Location = new System.Drawing.Point(100, 70);
+            this.btnConnectOPC.Name = "btnConnectOPC";
+            this.btnConnectOPC.Size = new System.Drawing.Size(80, 30);
+            this.btnConnectOPC.TabIndex = 2;
+            this.btnConnectOPC.Text = "连接";
+            this.btnConnectOPC.UseVisualStyleBackColor = false;
+            this.btnConnectOPC.Click += new System.EventHandler(this.btnConnectOPC_Click);
+            // 
+            // btnDisconnectOPC
+            // 
+            this.btnDisconnectOPC.BackColor = System.Drawing.Color.LightCoral;
+            this.btnDisconnectOPC.Enabled = false;
+            this.btnDisconnectOPC.Location = new System.Drawing.Point(190, 70);
+            this.btnDisconnectOPC.Name = "btnDisconnectOPC";
+            this.btnDisconnectOPC.Size = new System.Drawing.Size(80, 30);
+            this.btnDisconnectOPC.TabIndex = 3;
+            this.btnDisconnectOPC.Text = "断开";
+            this.btnDisconnectOPC.UseVisualStyleBackColor = false;
+            this.btnDisconnectOPC.Click += new System.EventHandler(this.btnDisconnectOPC_Click);
+            // 
+            // groupBoxOPCData
+            // 
+            this.groupBoxOPCData.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.groupBoxOPCData.Controls.Add(this.label21);
+            this.groupBoxOPCData.Controls.Add(this.cmbFunctionCodeOPC);
+            this.groupBoxOPCData.Controls.Add(this.btnBrowseOPC);
+            this.groupBoxOPCData.Controls.Add(this.btnStopContinuousReadOPC);
+            this.groupBoxOPCData.Controls.Add(this.btnStartContinuousReadOPC);
+            this.groupBoxOPCData.Controls.Add(this.btnReadOPC);
+            this.groupBoxOPCData.Controls.Add(this.txtIntervalOPC);
+            this.groupBoxOPCData.Controls.Add(this.label20);
+            this.groupBoxOPCData.Controls.Add(this.txtNodeId);
+            this.groupBoxOPCData.Controls.Add(this.label19);
+            this.groupBoxOPCData.Location = new System.Drawing.Point(17, 195);
+            this.groupBoxOPCData.Name = "groupBoxOPCData";
+            this.groupBoxOPCData.Size = new System.Drawing.Size(540, 160);
+            this.groupBoxOPCData.TabIndex = 1;
+            this.groupBoxOPCData.TabStop = false;
+            this.groupBoxOPCData.Text = "数据采集";
+            // 
+            // label19
+            // 
+            this.label19.Location = new System.Drawing.Point(20, 30);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(80, 20);
+            this.label19.TabIndex = 0;
+            this.label19.Text = "节点ID:";
+            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtNodeId
+            // 
+            this.txtNodeId.Location = new System.Drawing.Point(100, 30);
+            this.txtNodeId.Name = "txtNodeId";
+            this.txtNodeId.Size = new System.Drawing.Size(300, 27);
+            this.txtNodeId.TabIndex = 1;
+            this.txtNodeId.Text = "ns=2;s=Demo.Dynamic.Scalar.Double";
+            // 
+            // label20
+            // 
+            this.label20.Location = new System.Drawing.Point(20, 70);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(100, 20);
+            this.label20.TabIndex = 2;
+            this.label20.Text = "读取间隔(ms):";
+            this.label20.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // txtIntervalOPC
+            // 
+            this.txtIntervalOPC.Location = new System.Drawing.Point(120, 70);
+            this.txtIntervalOPC.Name = "txtIntervalOPC";
+            this.txtIntervalOPC.Size = new System.Drawing.Size(60, 27);
+            this.txtIntervalOPC.TabIndex = 3;
+            this.txtIntervalOPC.Text = "1000";
+            // 
+            // btnReadOPC
+            // 
+            this.btnReadOPC.BackColor = System.Drawing.Color.LightGoldenrodYellow;
+            this.btnReadOPC.Location = new System.Drawing.Point(190, 70);
+            this.btnReadOPC.Name = "btnReadOP极C";
+            this.btnReadOPC.Size = new System.Drawing.Size(80, 30);
+            this.btnReadOPC.TabIndex = 4;
+            this.btnReadOPC.Text = "读取";
+            this.btnReadOPC.UseVisualStyleBackColor = false;
+            this.btnReadOPC.Click += new System.EventHandler(this.btnReadOPC_Click);
+            // 
+            // btnStartContinuousReadOPC
+            // 
+            this.btnStartContinuousReadOPC.BackColor = System.Drawing.Color.LightBlue;
+            this.btnStartContinuousReadOPC.Location = new System.Drawing.Point(280, 70);
+            this.btnStartContinuousReadOPC.Name = "btnStartContinuousReadOPC";
+            this.btnStartContinuousReadOPC.Size = new System.Drawing.Size(120, 30);
+            this.btnStartContinuousReadOPC.TabIndex = 5;
+            this.btnStartContinuousReadOPC.Text = "开始循环读取";
+            this.btnStartContinuousReadOPC.UseVisualStyleBackColor = false;
+            this.btnStartContinuousReadOPC.Click += new System.EventHandler(this.btnStartContinuousReadOPC_Click);
+            // 
+            // btnStopContinuousReadOPC
+            // 
+            this.btnStopContinuousReadOPC.BackColor = System.Drawing.Color.LightSalmon;
+            this.btnStopContinuousReadOPC.Enabled = false;
+            this.btnStopContinuousReadOPC.Location = new System.Drawing.Point(410, 70);
+            this.btnStopContinuousReadOPC.Name = "btnStopContinuousReadOP极C";
+            this.btnStopContinuousReadOPC.Size = new System.Drawing.Size(120, 30);
+            this.btnStopContinuousReadOPC.TabIndex = 6;
+            this.btnStopContinuousReadOPC.Text = "停止循环读取";
+            this.btnStopContinuousReadOPC.UseVisualStyleBackColor = false;
+            this.btnStopContinuousReadOPC.Click += new System.EventHandler(this.btnStopContinuousReadOPC_Click);
+            // 
+            // btnBrowseOPC
+            // 
+            this.btnBrowseOPC.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.btnBrowseOPC.Location = new System.Drawing.Point(410, 30);
+            this.btnBrowseOPC.Name = "btnBrowseOPC";
+            this.btnBrowseOPC.Size = new System.Drawing.Size(100, 30);
+            this.btnBrowseOPC.TabIndex = 7;
+            this.btnBrowseOPC.Text = "浏览节点";
+            this.btnBrowseOPC.UseVisualStyleBackColor = false;
+            this.btnBrowseOPC.Click += new System.EventHandler(this.btnBrowseOPC_Click);
+            // 
+            // label21
+            // 
+            this.label21.Location = new System.Drawing.Point(20, 110);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(80, 20);
+            this.label21.TabIndex = 8;
+            this.label21.Text = "功能码:";
+            this.label21.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cmbFunctionCodeOPC
+            // 
+            this.cmbFunctionCodeOPC.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbFunctionCodeOPC.Items.AddRange(new object[] {
+    "Read Value",
+    "Browse Nodes",
+    "Read Attributes"});
+            this.cmbFunctionCodeOPC.Location = new System.Drawing.Point(100, 110);
+            this.cmbFunctionCodeOPC.Name = "cmbFunctionCodeOPC";
+            this.cmbFunctionCodeOPC.Size = new System.Drawing.Size(150, 28);
+            this.cmbFunctionCodeOPC.TabIndex = 9;
+
+            // 将OPC UA页面添加到TabControl
+            this.tabControl1.Controls.Add(this.tabPageOPC);
+
+            // 在窗体标题中添加OPC UA支持
+            this.Text = "Modbus数据采集器 - RTU/TCP/OPC UA协议支持";
+
+
 
         }
 

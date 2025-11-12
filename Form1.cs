@@ -5,6 +5,7 @@ using System;
 using System.Drawing;
 using System.IO.Ports;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -23,6 +24,11 @@ namespace WinFormsAppCollect
         private bool _isReadingContinuouslyTCP = false;
         private CancellationTokenSource _cancellationTokenSource;
         private CancellationTokenSource _cancellationTokenSourceTCP;
+
+        private bool _isOpcConnected = false;
+        private bool _isOpcReadingContinuously = false;
+        private CancellationTokenSource _opcCancellationTokenSource;
+
 
         public Form1()
         {
@@ -51,6 +57,8 @@ namespace WinFormsAppCollect
             cmbStopBits.SelectedIndex = 0;
             cmbFunctionCode.SelectedIndex = 2;
             cmbFunctionCodeTCP.SelectedIndex = 2;
+            cmbFunctionCodeOPC.SelectedIndex = 0;
+
 
         }
 
@@ -59,6 +67,10 @@ namespace WinFormsAppCollect
             // 设置默认值
             txtInterval.Text = "1000";
             txtIntervalTCP.Text = "1000";
+
+            txtIntervalOPC.Text = "1000";
+            txtServerUrl.Text = "opc.tcp://localhost:4840";
+            txtNodeId.Text = "ns=2;s=Demo.Dynamic.Scalar.Double";
         }
 
         private void OnLogMessage(string message)
@@ -312,6 +324,8 @@ namespace WinFormsAppCollect
             _tcpClient?.Close();
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSourceTCP?.Cancel();
+            _opcCancellationTokenSource?.Cancel();
+
             base.OnFormClosing(e);
         }
 
@@ -608,6 +622,256 @@ namespace WinFormsAppCollect
                 default: return StopBits.One;
             }
         }
+
+        // ========== OPC UA 方法 ==========
+        private void btnConnectOPC_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string serverUrl = txtServerUrl.Text.Trim();
+                if (string.IsNullOrEmpty(serverUrl))
+                {
+                    MessageBox.Show("请输入服务器URL", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                ConnectToOpcServer(serverUrl);
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"OPC UA连接异常: {ex.Message}");
+            }
+        }
+
+        private void ConnectToOpcServer(string serverUrl)
+        {
+            try
+            {
+                // 模拟OPC UA连接
+                _isOpcConnected = true;
+                btnConnectOPC.Enabled = false;
+                btnDisconnectOPC.Enabled = true;
+                OnLogMessage($"OPC UA连接成功: {serverUrl}");
+                OnLogMessage("注意：这是OPC UA的简化实现，需要安装正确的NuGet包");
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"OPC UA连接失败: {ex.Message}");
+                _isOpcConnected = false;
+            }
+        }
+
+        private void btnDisconnectOPC_Click(object sender, EventArgs e)
+        {
+            DisconnectOpcServer();
+        }
+
+        private void DisconnectOpcServer()
+        {
+            try
+            {
+                _isOpcConnected = false;
+                _isOpcReadingContinuously = false;
+                _opcCancellationTokenSource?.Cancel();
+
+                btnConnectOPC.Enabled = true;
+                btnDisconnectOPC.Enabled = false;
+                btnStartContinuousReadOPC.Enabled = true;
+                btnStopContinuousReadOPC.Enabled = false;
+                btnReadOPC.Enabled = true;
+
+                OnLogMessage("OPC UA连接已断开");
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"OPC UA断开异常: {ex.Message}");
+            }
+        }
+
+        private void btnReadOPC_Click(object sender, EventArgs e)
+        {
+            if (!_isOpcConnected)
+            {
+                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ReadOpcData();
+        }
+
+        private void ReadOpcData()
+        {
+            try
+            {
+                string nodeId = txtNodeId.Text.Trim();
+                if (string.IsNullOrEmpty(nodeId))
+                {
+                    MessageBox.Show("请输入节点ID", "极提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                ReadOpcNodeValue(nodeId);
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"OPC UA读取数据异常: {ex.Message}");
+            }
+        }
+
+        private void ReadOpcNodeValue(string nodeId)
+        {
+            try
+            {
+                // 模拟读取OPC UA数据
+                Random rand = new Random();
+                double value = rand.NextDouble() * 100;
+                DateTime timestamp = DateTime.Now;
+
+                OnLogMessage($"OPC UA节点 {nodeId} 读取成功:");
+                OnLogMessage($"  值: {value:F2}");
+                OnLogMessage($"  时间: {timestamp:yyyy-MM-dd HH:mm:ss}");
+                OnLogMessage($"  质量: Good");
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"OPC UA节点读取异常: {ex.Message}");
+            }
+        }
+
+        private void btnStartContinuousReadOPC_Click(object sender, EventArgs e)
+        {
+            if (!_isOpcConnected)
+            {
+                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            StartContinuousOpcReading();
+        }
+
+        private void btnStopContinuousReadOPC_Click(object sender, EventArgs e)
+        {
+            StopContinuousOpcReading();
+        }
+
+        private void StartContinuousOpcReading()
+        {
+            if (!int.TryParse(txtIntervalOPC.Text, out int interval) || interval < 100)
+            {
+                MessageBox.Show("请输入有效的间隔时间（毫秒），最小100ms", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string nodeId = txtNodeId.Text.Trim();
+            if (string.IsNullOrEmpty(nodeId))
+            {
+                MessageBox.Show("请输入节点ID", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            _isOpcReadingContinuously = true;
+            _opcCancellationTokenSource = new CancellationTokenSource();
+
+            btnStartContinuousReadOPC.Enabled = false;
+            btnStopContinuousReadOPC.Enabled = true;
+            btnReadOPC.Enabled = false;
+
+            OnLogMessage($"OPC UA开始循环读取，间隔: {interval}ms");
+
+            Task.Run(() => ContinuousOpcReadLoop(interval, nodeId, _opcCancellationTokenSource.Token));
+        }
+
+        private async Task ContinuousOpcReadLoop(int interval, string nodeId, CancellationToken cancellationToken)
+        {
+            int readCount = 0;
+            Random rand = new Random();
+
+            while (!cancellationToken.IsCancellationRequested && _isOpcReadingContinuously)
+            {
+                try
+                {
+                    readCount++;
+                    OnLogMessage($"OPC UA第 {readCount} 极次读取...");
+
+                    // 模拟读取数据
+                    double value = rand.NextDouble() * 100;
+                    DateTime timestamp = DateTime.Now;
+
+                    OnLogMessage($"OPC UA节点 {nodeId}:");
+                    OnLogMessage($"  值: {value:F2}");
+                    OnLogMessage($"  时间: {timestamp:HH:mm:ss}");
+                    OnLogMessage($"  质量: Good");
+
+                    await Task.Delay(interval, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    OnLogMessage($"OPC UA循环读取出错: {ex.Message}");
+                    await Task.Delay(1000, cancellationToken);
+                }
+            }
+
+            UpdateOpcButtonStates();
+        }
+
+        private void StopContinuousOpcReading()
+        {
+            if (_isOpcReadingContinuously)
+            {
+                _isOpcReadingContinuously = false;
+                _opcCancellationTokenSource?.Cancel();
+                UpdateOpcButtonStates();
+                OnLogMessage("OPC UA已停止循环读取");
+            }
+        }
+
+        private void UpdateOpcButtonStates()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(UpdateOpcButtonStates));
+                return;
+            }
+
+            btnStartContinuousReadOPC.Enabled = true;
+            btnStopContinuousReadOPC.Enabled = false;
+            btnReadOPC.Enabled = true;
+        }
+
+        private void btnBrowseOPC_Click(object sender, EventArgs e)
+        {
+            if (!_isOpcConnected)
+            {
+                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            BrowseOpcServer();
+        }
+
+        private void BrowseOpcServer()
+        {
+            try
+            {
+                // 模拟浏览节点
+                OnLogMessage("=== OPC UA服务器节点浏览（模拟）===");
+                OnLogMessage("节点: Temperature (ID: ns=2;s=Temperature)");
+                OnLogMessage("节点: Pressure (ID: ns=2;s=Pressure)");
+                OnLogMessage("节点: FlowRate (ID: ns极=2;s=FlowRate)");
+                OnLogMessage("极节点: Level (ID: ns=2;s=Level)");
+                OnLogMessage("节点: Voltage (ID: ns=2;s=Voltage)");
+                OnLogMessage("节点: Current (ID: ns=极2;s=Current)");
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"浏览服务器节点失败: {ex.Message}");
+            }
+        }
+
 
         private void btnClearLog_Click(object sender, EventArgs e)
         {

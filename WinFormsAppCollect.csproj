@@ -122,6 +122,9 @@
     <Compile Include="ModbusHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\OpcUaService.cs" />
+    <Compile Include="Services\ModbusTcpService.cs" />
+    <Compile Include="Services\ModbusRtuService.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

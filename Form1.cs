@@ -1,34 +1,17 @@
-﻿using Modbus.Device;
-using NModbus;
-using NModbus.IO;
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO.Ports;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using IModbusMaster = NModbus.IModbusMaster;
+using WinFormsAppCollect.Services;
 
 namespace WinFormsAppCollect
 {
     public partial class Form1 : Form
     {
-        private IModbusMaster _modbusTcpMaster;
-        private TcpClient _tcpClient;
-        private bool _isTcpConnected = false;
-
-        private ModbusHelper _modbusHelper;
-        private bool _isReadingContinuously = false;
-        private bool _isReadingContinuouslyTCP = false;
-        private CancellationTokenSource _cancellationTokenSource;
-        private CancellationTokenSource _cancellationTokenSourceTCP;
-
-        private bool _isOpcConnected = false;
-        private bool _isOpcReadingContinuously = false;
-        private CancellationTokenSource _opcCancellationTokenSource;
-
+        private ModbusRtuService _rtuService;
+        private ModbusTcpService _tcpService;
+        private OpcUaService _opcService;
 
         public Form1()
         {
@@ -38,19 +21,23 @@ namespace WinFormsAppCollect
 
         private void InitializeApplication()
         {
-            _modbusHelper = new ModbusHelper();
-            _modbusHelper.LogMessage += OnLogMessage;
+            _rtuService = new ModbusRtuService();
+            _tcpService = new ModbusTcpService();
+            _opcService = new OpcUaService();
+
+            _rtuService.LogMessage += OnLogMessage;
+            _tcpService.LogMessage += OnLogMessage;
+            _opcService.LogMessage += OnLogMessage;
+
             InitializeControls();
             SetDefaultValues();
         }
 
         private void InitializeControls()
         {
-            // 初始化串口列表
             cmbPortName.Items.AddRange(SerialPort.GetPortNames());
             if (cmbPortName.Items.Count > 0) cmbPortName.SelectedIndex = 0;
 
-            // 设置默认选择
             cmbBaudRate.SelectedIndex = 0;
             cmbDataBits.SelectedIndex = 1;
             cmbParity.SelectedIndex = 0;
@@ -58,19 +45,14 @@ namespace WinFormsAppCollect
             cmbFunctionCode.SelectedIndex = 2;
             cmbFunctionCodeTCP.SelectedIndex = 2;
             cmbFunctionCodeOPC.SelectedIndex = 0;
-
-
         }
 
         private void SetDefaultValues()
         {
-            // 设置默认值
             txtInterval.Text = "1000";
             txtIntervalTCP.Text = "1000";
-
             txtIntervalOPC.Text = "1000";
-            txtServerUrl.Text = "opc.tcp://localhost:4840";
-            txtNodeId.Text = "ns=2;s=Demo.Dynamic.Scalar.Double";
+            txtNodeId.Text = "ns=2;s=1010";
         }
 
         private void OnLogMessage(string message)
@@ -89,7 +71,7 @@ namespace WinFormsAppCollect
         }
 
         // ========== RTU相关方法 ==========
-        private void btnConnect_Click(object sender, EventArgs e)
+        private async void btnConnect_Click(object sender, EventArgs e)
         {
             if (cmbPortName.SelectedItem == null)
             {
@@ -106,7 +88,7 @@ namespace WinFormsAppCollect
                 Parity parity = GetParityFromString(cmbParity.SelectedItem.ToString());
                 StopBits stopBits = GetStopBitsFromString(cmbStopBits.SelectedItem.ToString());
 
-                bool success = _modbusHelper.Connect(portName, baudRate, dataBits, parity, stopBits);
+                bool success = _rtuService.Connect(portName, baudRate, dataBits, parity, stopBits);
 
                 if (success)
                 {
@@ -123,7 +105,7 @@ namespace WinFormsAppCollect
 
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
-            _modbusHelper.Disconnect();
+            _rtuService.Disconnect();
             btnConnect.Enabled = true;
             btnDisconnect.Enabled = false;
             OnLogMessage("RTU连接已断开");
@@ -131,7 +113,7 @@ namespace WinFormsAppCollect
 
         private void btnRead_Click(object sender, EventArgs e)
         {
-            if (!_modbusHelper.IsConnected)
+            if (!_rtuService.IsConnected)
             {
                 MessageBox.Show("请先连接串口", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -142,7 +124,7 @@ namespace WinFormsAppCollect
 
         private void btnStartContinuousRead_Click(object sender, EventArgs e)
         {
-            if (!_modbusHelper.IsConnected)
+            if (!_rtuService.IsConnected)
             {
                 MessageBox.Show("请先连接串口", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -157,7 +139,7 @@ namespace WinFormsAppCollect
         }
 
         // ========== TCP连接方法 ==========
-        private void btnConnectTCP_Click(object sender, EventArgs e)
+        private async void btnConnectTCP_Click(object sender, EventArgs e)
         {
             try
             {
@@ -174,165 +156,33 @@ namespace WinFormsAppCollect
                     return;
                 }
 
-                // 创建TCP连接 - 正确的实现方式
-                _tcpClient = new TcpClient();
-                _tcpClient.Connect(ipAddress, port);
+                bool success = await _tcpService.ConnectAsync(ipAddress, port);
 
-                // 创建Modbus TCP主站
-                var factory = new ModbusFactory();
-                _modbusTcpMaster = factory.CreateMaster(_tcpClient);
-                _isTcpConnected = true;
-
-                btnConnectTCP.Enabled = false;
-                btnDisconnectTCP.Enabled = true;
-                OnLogMessage($"TCP连接成功: {ipAddress}:{port}");
+                if (success)
+                {
+                    btnConnectTCP.Enabled = false;
+                    btnDisconnectTCP.Enabled = true;
+                    OnLogMessage($"TCP连接成功: {ipAddress}:{port}");
+                }
             }
             catch (Exception ex)
             {
                 OnLogMessage($"TCP连接异常: {ex.Message}");
-                _isTcpConnected = false;
-                _modbusTcpMaster?.Dispose();
-                _tcpClient?.Close();
             }
         }
 
         private void btnDisconnectTCP_Click(object sender, EventArgs e)
         {
-            try
-            {
-                _modbusTcpMaster?.Dispose();
-                _tcpClient?.Close();
-                _modbusTcpMaster = null;
-                _tcpClient = null;
-                _isTcpConnected = false;
-
-                btnConnectTCP.Enabled = true;
-                btnDisconnectTCP.Enabled = false;
-                OnLogMessage("TCP连接已断开");
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"TCP断开异常: {ex.Message}");
-            }
+            _tcpService.Disconnect();
+            btnConnectTCP.Enabled = true;
+            btnDisconnectTCP.Enabled = false;
+            OnLogMessage("TCP连接已断开");
         }
 
         // ========== TCP数据读取方法 ==========
-        private void ReadDataTCP(string functionCode, byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-        {
-            try
-            {
-                switch (functionCode)
-                {
-                    case "01 Read Coils":
-                        bool[] coils = _modbusTcpMaster.ReadCoils(slaveAddress, startAddress, numberOfPoints);
-                        DisplayReadResult("TCP线圈", coils, startAddress);
-                        break;
-
-                    case "02 Read Inputs":
-                        bool[] inputs = _modbusTcpMaster.ReadInputs(slaveAddress, startAddress, numberOfPoints);
-                        DisplayReadResult("TCP输入状态", inputs, startAddress);
-                        break;
-
-                    case "03 Read Holding Registers":
-                        ushort[] holdingRegisters = _modbusTcpMaster.ReadHoldingRegisters(slaveAddress, startAddress, numberOfPoints);
-                        DisplayReadResult("TCP保持寄存器", holdingRegisters, startAddress);
-                        break;
-
-                    case "04 Read Input Registers":
-                        ushort[] inputRegisters = _modbusTcpMaster.ReadInputRegisters(slaveAddress, startAddress, numberOfPoints);
-                        DisplayReadResult("TCP输入寄存器", inputRegisters, startAddress);
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"TCP读取数据异常: {ex.Message}");
-                // 发生异常时自动断开连接
-                btnDisconnectTCP_Click(null, null);
-            }
-        }
-
-        // ========== TCP循环读取方法 ==========
-        private async Task ContinuousReadLoopTCP(int interval, CancellationToken cancellationToken)
-        {
-            int readCount = 0;
-
-            while (!cancellationToken.IsCancellationRequested && _isReadingContinuouslyTCP)
-            {
-                try
-                {
-                    // 检查TCP连接状态
-                    if (!_isTcpConnected || _tcpClient == null || !_tcpClient.Connected)
-                    {
-                        OnLogMessage("TCP连接已断开，停止循环读取");
-                        break;
-                    }
-
-                    readCount++;
-                    OnLogMessage($"TCP第 {readCount} 次读取...");
-
-                    byte slaveAddress = byte.Parse(txtSlaveAddressTCP.Text);
-                    ushort startAddress = ushort.Parse(txtStartAddressTCP.Text);
-                    ushort numberOfPoints = ushort.Parse(txtNumberOfPointsTCP.Text);
-
-                    string functionCode = null;
-                    // 检查是否需要在UI线程上执行
-                    if (cmbFunctionCodeTCP.InvokeRequired)
-                    {
-                        // 如果需要跨线程访问，使用Invoke在UI线程上执行
-                        cmbFunctionCodeTCP.Invoke(new Action(() =>
-                        {
-                            functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
-                        }));
-                    }
-                    else
-                    {
-
-                        // 如果已经在UI线程上，直接访问
-                        functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
-                    }
-                    if (string.IsNullOrEmpty(functionCode))
-                    {
-                        OnLogMessage("TCP未选择功能码，跳过本次读取。");
-                        await Task.Delay(1000, cancellationToken);
-                        continue;
-                    }
-
-                    ReadDataTCP(functionCode, slaveAddress, startAddress, numberOfPoints);
-                    await Task.Delay(interval, cancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    OnLogMessage($"TCP循环读取出错: {ex.Message}");
-                    await Task.Delay(1000, cancellationToken);
-                }
-            }
-
-            UpdateTCPButtonStates();
-        }
-
-        // ========== 窗体关闭时的清理 ==========
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            // 清理资源
-            _modbusHelper?.Dispose();
-            _modbusTcpMaster?.Dispose();
-            _tcpClient?.Close();
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSourceTCP?.Cancel();
-            _opcCancellationTokenSource?.Cancel();
-
-            base.OnFormClosing(e);
-        }
-
-
         private void btnReadTCP_Click(object sender, EventArgs e)
         {
-            if (!_isTcpConnected)
+            if (!_tcpService.IsConnected)
             {
                 MessageBox.Show("请先连接TCP", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -343,7 +193,7 @@ namespace WinFormsAppCollect
 
         private void btnStartContinuousReadTCP_Click(object sender, EventArgs e)
         {
-            if (!_isTcpConnected)
+            if (!_tcpService.IsConnected)
             {
                 MessageBox.Show("请先连接TCP", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -357,6 +207,82 @@ namespace WinFormsAppCollect
             StopContinuousTCPReading();
         }
 
+        // ========== OPC UA相关方法 ==========
+        private async void btnConnectOPC_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string serverUrl = txtServerUrl.Text.Trim();
+                if (string.IsNullOrEmpty(serverUrl))
+                {
+                    MessageBox.Show("请输入服务器URL", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                bool success = await _opcService.ConnectAsync(serverUrl);
+
+                if (success)
+                {
+                    btnConnectOPC.Enabled = false;
+                    btnDisconnectOPC.Enabled = true;
+                    btnStartContinuousReadOPC.Enabled = true;
+                    btnStopContinuousReadOPC.Enabled = true;
+                    btnReadOPC.Enabled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnLogMessage($"OPC UA连接异常: {ex.Message}");
+            }
+        }
+
+        private void btnDisconnectOPC_Click(object sender, EventArgs e)
+        {
+            _opcService.Disconnect();
+            btnConnectOPC.Enabled = true;
+            btnDisconnectOPC.Enabled = false;
+            UpdateOpcButtonStates();
+            OnLogMessage("OPC UA连接已断开");
+        }
+
+        private void btnReadOPC_Click(object sender, EventArgs e)
+        {
+            if (!_opcService.IsConnected)
+            {
+                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ReadOpcData();
+        }
+
+        private void btnStartContinuousReadOPC_Click(object sender, EventArgs e)
+        {
+            if (!_opcService.IsConnected)
+            {
+                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            StartContinuousOpcReading();
+        }
+
+        private void btnStopContinuousReadOPC_Click(object sender, EventArgs e)
+        {
+            StopContinuousOpcReading();
+        }
+
+        private void btnBrowseOPC_Click(object sender, EventArgs e)
+        {
+            if (!_opcService.IsConnected)
+            {
+                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            BrowseOpcServer();
+        }
+
         // ========== 数据读取核心方法 ==========
         private void ReadRTUData()
         {
@@ -366,23 +292,35 @@ namespace WinFormsAppCollect
                 ushort startAddress = ushort.Parse(txtStartAddress.Text);
                 ushort numberOfPoints = ushort.Parse(txtNumberOfPoints.Text);
 
-                string functionCode = null;
-                // 检查是否需要在UI线程上执行
-                if (cmbFunctionCode.InvokeRequired)
+                string functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                if (string.IsNullOrEmpty(functionCode))
                 {
-                    // 如果需要跨线程访问，使用Invoke在UI线程上执行
-                    cmbFunctionCode.Invoke(new Action(() =>
-                    {
-                        functionCode = cmbFunctionCode.SelectedItem?.ToString();
-                    }));
+                    MessageBox.Show("请选择功能码", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
-                else
-                {
 
-                    // 如果已经在UI线程上，直接访问
-                    functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                switch (functionCode)
+                {
+                    case "01 Read Coils":
+                        bool[] coils = _rtuService.ReadCoils(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("RTU线圈", coils, startAddress);
+                        break;
+
+                    case "02 Read Inputs":
+                        bool[] inputs = _rtuService.ReadInputs(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("RTU输入状态", inputs, startAddress);
+                        break;
+
+                    case "03 Read Holding Registers":
+                        ushort[] holdingRegisters = _rtuService.ReadHoldingRegisters(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("RTU保持寄存器", holdingRegisters, startAddress);
+                        break;
+
+                    case "04 Read Input Registers":
+                        ushort[] inputRegisters = _rtuService.ReadInputRegisters(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("RTU输入寄存器", inputRegisters, startAddress);
+                        break;
                 }
-                ReadDataRTU(functionCode, slaveAddress, startAddress, numberOfPoints);
             }
             catch (Exception ex)
             {
@@ -398,23 +336,35 @@ namespace WinFormsAppCollect
                 ushort startAddress = ushort.Parse(txtStartAddressTCP.Text);
                 ushort numberOfPoints = ushort.Parse(txtNumberOfPointsTCP.Text);
 
-                string functionCode = null;
-                // 检查是否需要在UI线程上执行
-                if (cmbFunctionCode.InvokeRequired)
+                string functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
+                if (string.IsNullOrEmpty(functionCode))
                 {
-                    // 如果需要跨线程访问，使用Invoke在UI线程上执行
-                    cmbFunctionCode.Invoke(new Action(() =>
-                    {
-                        functionCode = cmbFunctionCode.SelectedItem?.ToString();
-                    }));
+                    MessageBox.Show("请选择功能码", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
-                else
-                {
 
-                    // 如果已经在UI线程上，直接访问
-                    functionCode = cmbFunctionCode.SelectedItem?.ToString();
+                switch (functionCode)
+                {
+                    case "01 Read Coils":
+                        bool[] coils = _tcpService.ReadCoils(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("TCP线圈", coils, startAddress);
+                        break;
+
+                    case "02 Read Inputs":
+                        bool[] inputs = _tcpService.ReadInputs(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("TCP输入状态", inputs, startAddress);
+                        break;
+
+                    case "03 Read Holding Registers":
+                        ushort[] holdingRegisters = _tcpService.ReadHoldingRegisters(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("TCP保持寄存器", holdingRegisters, startAddress);
+                        break;
+
+                    case "04 Read Input Registers":
+                        ushort[] inputRegisters = _tcpService.ReadInputRegisters(slaveAddress, startAddress, numberOfPoints);
+                        DisplayReadResult("TCP输入寄存器", inputRegisters, startAddress);
+                        break;
                 }
-                ReadDataTCP(functionCode, slaveAddress, startAddress, numberOfPoints);
             }
             catch (Exception ex)
             {
@@ -422,39 +372,27 @@ namespace WinFormsAppCollect
             }
         }
 
-        private void ReadDataRTU(string functionCode, byte slaveAddress, ushort startAddress, ushort numberOfPoints)
+        private void ReadOpcData()
         {
-            switch (functionCode)
+            try
             {
-                case "01 Read Coils":
-                    bool[] coils = _modbusHelper.ReadCoils(slaveAddress, startAddress, numberOfPoints);
-                    DisplayReadResult("RTU线圈", coils, startAddress);
-                    break;
+                string nodeId = txtNodeId.Text.Trim();
+                if (string.IsNullOrEmpty(nodeId))
+                {
+                    MessageBox.Show("请输入节点ID", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                case "02 Read Inputs":
-                    bool[] inputs = _modbusHelper.ReadInputs(slaveAddress, startAddress, numberOfPoints);
-                    DisplayReadResult("RTU输入状态", inputs, startAddress);
-                    break;
+                var result = _opcService.ReadNodeValue(nodeId);
 
-                case "03 Read Holding Registers":
-                    ushort[] holdingRegisters = _modbusHelper.ReadHoldingRegistersWithActivation(slaveAddress, startAddress, numberOfPoints);
-                    DisplayReadResult("RTU保持寄存器", holdingRegisters, startAddress);
-                    break;
-
-                case "04 Read Input Registers":
-                    ushort[] inputRegisters = _modbusHelper.ReadInputRegisters(slaveAddress, startAddress, numberOfPoints);
-                    DisplayReadResult("RTU输入寄存器", inputRegisters, startAddress);
-                    break;
+                OnLogMessage($"OPC UA节点 {nodeId} 读取成功:");
+                OnLogMessage($"  值: {result.value:F2}");
+                OnLogMessage($"  时间: {result.timestamp:yyyy-MM-dd HH:mm:ss}");
+                OnLogMessage($"  质量: {result.quality}");
             }
-        }
-
-        private void DisplayReadResult<T>(string dataType, T[] data, ushort startAddr)
-        {
-            OnLogMessage($"成功读取{dataType}数据，共{data.Length}个:");
-
-            for (int i = 0; i < data.Length; i++)
+            catch (Exception ex)
             {
-                OnLogMessage($"  地址 {i + startAddr}: {data[i]}");
+                OnLogMessage($"OPC UA读取数据异常: {ex.Message}");
             }
         }
 
@@ -467,8 +405,16 @@ namespace WinFormsAppCollect
                 return;
             }
 
-            _isReadingContinuously = true;
-            _cancellationTokenSource = new CancellationTokenSource();
+            byte slaveAddress = byte.Parse(txtSlaveAddress.Text);
+            ushort startAddress = ushort.Parse(txtStartAddress.Text);
+            ushort numberOfPoints = ushort.Parse(txtNumberOfPoints.Text);
+            string functionCode = cmbFunctionCode.SelectedItem?.ToString();
+
+            if (string.IsNullOrEmpty(functionCode))
+            {
+                MessageBox.Show("请选择功能码", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             btnStartContinuousRead.Enabled = false;
             btnStopContinuousRead.Enabled = true;
@@ -476,7 +422,7 @@ namespace WinFormsAppCollect
 
             OnLogMessage($"RTU开始循环读取，间隔: {interval}ms");
 
-            Task.Run(() => ContinuousReadLoopRTU(interval, _cancellationTokenSource.Token));
+            _rtuService.StartContinuousReading(interval, slaveAddress, startAddress, numberOfPoints, functionCode);
         }
 
         private void StartContinuousTCPReading()
@@ -487,8 +433,16 @@ namespace WinFormsAppCollect
                 return;
             }
 
-            _isReadingContinuouslyTCP = true;
-            _cancellationTokenSourceTCP = new CancellationTokenSource();
+            byte slaveAddress = byte.Parse(txtSlaveAddressTCP.Text);
+            ushort startAddress = ushort.Parse(txtStartAddressTCP.Text);
+            ushort numberOfPoints = ushort.Parse(txtNumberOfPointsTCP.Text);
+            string functionCode = cmbFunctionCodeTCP.SelectedItem?.ToString();
+
+            if (string.IsNullOrEmpty(functionCode))
+            {
+                MessageBox.Show("请选择功能码", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             btnStartContinuousReadTCP.Enabled = false;
             btnStopContinuousReadTCP.Enabled = true;
@@ -496,86 +450,55 @@ namespace WinFormsAppCollect
 
             OnLogMessage($"TCP开始循环读取，间隔: {interval}ms");
 
-            Task.Run(() => ContinuousReadLoopTCP(interval, _cancellationTokenSourceTCP.Token));
+            _tcpService.StartContinuousReading(interval, slaveAddress, startAddress, numberOfPoints, functionCode);
         }
 
-        private async Task ContinuousReadLoopRTU(int interval, CancellationToken cancellationToken)
+        private void StartContinuousOpcReading()
         {
-            int readCount = 0;
-
-            while (!cancellationToken.IsCancellationRequested && _isReadingContinuously)
+            if (!int.TryParse(txtIntervalOPC.Text, out int interval) || interval < 100)
             {
-                try
-                {
-                    readCount++;
-                    OnLogMessage($"RTU第 {readCount} 次读取...");
-
-                    byte slaveAddress = byte.Parse(txtSlaveAddress.Text);
-                    ushort startAddress = ushort.Parse(txtStartAddress.Text);
-                    ushort numberOfPoints = ushort.Parse(txtNumberOfPoints.Text);
-
-                    string functionCode = null;
-                    // 检查是否需要在UI线程上执行
-                    if (cmbFunctionCode.InvokeRequired)
-                    {
-                        // 如果需要跨线程访问，使用Invoke在UI线程上执行
-                        cmbFunctionCode.Invoke(new Action(() =>
-                        {
-                            functionCode = cmbFunctionCode.SelectedItem?.ToString();
-                        }));
-                    }
-                    else
-                    {
-
-                        // 如果已经在UI线程上，直接访问
-                        functionCode = cmbFunctionCode.SelectedItem?.ToString();
-                    }
-                    if (string.IsNullOrEmpty(functionCode))
-                    {
-                        OnLogMessage("RTU未选择功能码，跳过本次读取。");
-                        await Task.Delay(1000, cancellationToken);
-                        continue;
-                    }
-
-                    ReadDataRTU(functionCode, slaveAddress, startAddress, numberOfPoints);
-                    await Task.Delay(interval, cancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    OnLogMessage($"RTU循环读取出错: {ex.Message}");
-                    await Task.Delay(1000, cancellationToken);
-                }
+                MessageBox.Show("请输入有效的间隔时间（毫秒），最小100ms", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            UpdateRTUButtonStates();
+            string nodeId = txtNodeId.Text.Trim();
+            if (string.IsNullOrEmpty(nodeId))
+            {
+                MessageBox.Show("请输入节点ID", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            btnStartContinuousReadOPC.Enabled = false;
+            btnStopContinuousReadOPC.Enabled = true;
+            btnReadOPC.Enabled = false;
+
+            OnLogMessage($"OPC UA开始循环读取，间隔: {interval}ms");
+
+            _opcService.StartContinuousReading(interval, nodeId);
         }
 
         private void StopContinuousRTUReading()
         {
-            if (_isReadingContinuously)
-            {
-                _isReadingContinuously = false;
-                _cancellationTokenSource?.Cancel();
-                UpdateRTUButtonStates();
-                OnLogMessage("RTU已停止循环读取");
-            }
+            _rtuService.StopContinuousReading();
+            UpdateRTUButtonStates();
+            OnLogMessage("RTU已停止循环读取");
         }
 
         private void StopContinuousTCPReading()
         {
-            if (_isReadingContinuouslyTCP)
-            {
-                _isReadingContinuouslyTCP = false;
-                _cancellationTokenSourceTCP?.Cancel();
-                UpdateTCPButtonStates();
-                OnLogMessage("TCP已停止循环读取");
-            }
+            _tcpService.StopContinuousReading();
+            UpdateTCPButtonStates();
+            OnLogMessage("TCP已停止循环读取");
         }
 
+        private void StopContinuousOpcReading()
+        {
+            _opcService.StopContinuousReading();
+            UpdateOpcButtonStates();
+            OnLogMessage("OPC UA已停止循环读取");
+        }
+
+        // ========== 按钮状态更新方法 ==========
         private void UpdateRTUButtonStates()
         {
             if (InvokeRequired)
@@ -602,7 +525,30 @@ namespace WinFormsAppCollect
             btnReadTCP.Enabled = true;
         }
 
+        private void UpdateOpcButtonStates()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(UpdateOpcButtonStates));
+                return;
+            }
+
+            btnStartContinuousReadOPC.Enabled = _opcService.IsConnected;
+            btnStopContinuousReadOPC.Enabled = false;
+            btnReadOPC.Enabled = _opcService.IsConnected;
+        }
+
         // ========== 辅助方法 ==========
+        private void DisplayReadResult<T>(string dataType, T[] data, ushort startAddr)
+        {
+            OnLogMessage($"成功读取{dataType}数据，共{data.Length}个:");
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                OnLogMessage($"  地址 {i + startAddr}: {data[i]}");
+            }
+        }
+
         private Parity GetParityFromString(string parityStr)
         {
             switch (parityStr)
@@ -623,255 +569,14 @@ namespace WinFormsAppCollect
             }
         }
 
-        // ========== OPC UA 方法 ==========
-        private void btnConnectOPC_Click(object sender, EventArgs e)
+        // ========== 窗体关闭清理 ==========
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            try
-            {
-                string serverUrl = txtServerUrl.Text.Trim();
-                if (string.IsNullOrEmpty(serverUrl))
-                {
-                    MessageBox.Show("请输入服务器URL", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                ConnectToOpcServer(serverUrl);
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"OPC UA连接异常: {ex.Message}");
-            }
+            _rtuService?.Dispose();
+            _tcpService?.Dispose();
+            _opcService?.Dispose();
+            base.OnFormClosing(e);
         }
-
-        private void ConnectToOpcServer(string serverUrl)
-        {
-            try
-            {
-                // 模拟OPC UA连接
-                _isOpcConnected = true;
-                btnConnectOPC.Enabled = false;
-                btnDisconnectOPC.Enabled = true;
-                OnLogMessage($"OPC UA连接成功: {serverUrl}");
-                OnLogMessage("注意：这是OPC UA的简化实现，需要安装正确的NuGet包");
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"OPC UA连接失败: {ex.Message}");
-                _isOpcConnected = false;
-            }
-        }
-
-        private void btnDisconnectOPC_Click(object sender, EventArgs e)
-        {
-            DisconnectOpcServer();
-        }
-
-        private void DisconnectOpcServer()
-        {
-            try
-            {
-                _isOpcConnected = false;
-                _isOpcReadingContinuously = false;
-                _opcCancellationTokenSource?.Cancel();
-
-                btnConnectOPC.Enabled = true;
-                btnDisconnectOPC.Enabled = false;
-                btnStartContinuousReadOPC.Enabled = true;
-                btnStopContinuousReadOPC.Enabled = false;
-                btnReadOPC.Enabled = true;
-
-                OnLogMessage("OPC UA连接已断开");
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"OPC UA断开异常: {ex.Message}");
-            }
-        }
-
-        private void btnReadOPC_Click(object sender, EventArgs e)
-        {
-            if (!_isOpcConnected)
-            {
-                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            ReadOpcData();
-        }
-
-        private void ReadOpcData()
-        {
-            try
-            {
-                string nodeId = txtNodeId.Text.Trim();
-                if (string.IsNullOrEmpty(nodeId))
-                {
-                    MessageBox.Show("请输入节点ID", "极提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                ReadOpcNodeValue(nodeId);
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"OPC UA读取数据异常: {ex.Message}");
-            }
-        }
-
-        private void ReadOpcNodeValue(string nodeId)
-        {
-            try
-            {
-                // 模拟读取OPC UA数据
-                Random rand = new Random();
-                double value = rand.NextDouble() * 100;
-                DateTime timestamp = DateTime.Now;
-
-                OnLogMessage($"OPC UA节点 {nodeId} 读取成功:");
-                OnLogMessage($"  值: {value:F2}");
-                OnLogMessage($"  时间: {timestamp:yyyy-MM-dd HH:mm:ss}");
-                OnLogMessage($"  质量: Good");
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"OPC UA节点读取异常: {ex.Message}");
-            }
-        }
-
-        private void btnStartContinuousReadOPC_Click(object sender, EventArgs e)
-        {
-            if (!_isOpcConnected)
-            {
-                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            StartContinuousOpcReading();
-        }
-
-        private void btnStopContinuousReadOPC_Click(object sender, EventArgs e)
-        {
-            StopContinuousOpcReading();
-        }
-
-        private void StartContinuousOpcReading()
-        {
-            if (!int.TryParse(txtIntervalOPC.Text, out int interval) || interval < 100)
-            {
-                MessageBox.Show("请输入有效的间隔时间（毫秒），最小100ms", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            string nodeId = txtNodeId.Text.Trim();
-            if (string.IsNullOrEmpty(nodeId))
-            {
-                MessageBox.Show("请输入节点ID", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            _isOpcReadingContinuously = true;
-            _opcCancellationTokenSource = new CancellationTokenSource();
-
-            btnStartContinuousReadOPC.Enabled = false;
-            btnStopContinuousReadOPC.Enabled = true;
-            btnReadOPC.Enabled = false;
-
-            OnLogMessage($"OPC UA开始循环读取，间隔: {interval}ms");
-
-            Task.Run(() => ContinuousOpcReadLoop(interval, nodeId, _opcCancellationTokenSource.Token));
-        }
-
-        private async Task ContinuousOpcReadLoop(int interval, string nodeId, CancellationToken cancellationToken)
-        {
-            int readCount = 0;
-            Random rand = new Random();
-
-            while (!cancellationToken.IsCancellationRequested && _isOpcReadingContinuously)
-            {
-                try
-                {
-                    readCount++;
-                    OnLogMessage($"OPC UA第 {readCount} 极次读取...");
-
-                    // 模拟读取数据
-                    double value = rand.NextDouble() * 100;
-                    DateTime timestamp = DateTime.Now;
-
-                    OnLogMessage($"OPC UA节点 {nodeId}:");
-                    OnLogMessage($"  值: {value:F2}");
-                    OnLogMessage($"  时间: {timestamp:HH:mm:ss}");
-                    OnLogMessage($"  质量: Good");
-
-                    await Task.Delay(interval, cancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    OnLogMessage($"OPC UA循环读取出错: {ex.Message}");
-                    await Task.Delay(1000, cancellationToken);
-                }
-            }
-
-            UpdateOpcButtonStates();
-        }
-
-        private void StopContinuousOpcReading()
-        {
-            if (_isOpcReadingContinuously)
-            {
-                _isOpcReadingContinuously = false;
-                _opcCancellationTokenSource?.Cancel();
-                UpdateOpcButtonStates();
-                OnLogMessage("OPC UA已停止循环读取");
-            }
-        }
-
-        private void UpdateOpcButtonStates()
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(UpdateOpcButtonStates));
-                return;
-            }
-
-            btnStartContinuousReadOPC.Enabled = true;
-            btnStopContinuousReadOPC.Enabled = false;
-            btnReadOPC.Enabled = true;
-        }
-
-        private void btnBrowseOPC_Click(object sender, EventArgs e)
-        {
-            if (!_isOpcConnected)
-            {
-                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            BrowseOpcServer();
-        }
-
-        private void BrowseOpcServer()
-        {
-            try
-            {
-                // 模拟浏览节点
-                OnLogMessage("=== OPC UA服务器节点浏览（模拟）===");
-                OnLogMessage("节点: Temperature (ID: ns=2;s=Temperature)");
-                OnLogMessage("节点: Pressure (ID: ns=2;s=Pressure)");
-                OnLogMessage("节点: FlowRate (ID: ns极=2;s=FlowRate)");
-                OnLogMessage("极节点: Level (ID: ns=2;s=Level)");
-                OnLogMessage("节点: Voltage (ID: ns=2;s=Voltage)");
-                OnLogMessage("节点: Current (ID: ns=极2;s=Current)");
-            }
-            catch (Exception ex)
-            {
-                OnLogMessage($"浏览服务器节点失败: {ex.Message}");
-            }
-        }
-
 
         private void btnClearLog_Click(object sender, EventArgs e)
         {

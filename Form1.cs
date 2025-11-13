@@ -30,7 +30,6 @@ namespace WinFormsAppCollect
             _opcService.LogMessage += OnLogMessage;
 
             InitializeControls();
-            SetDefaultValues();
         }
 
         private void InitializeControls()
@@ -45,14 +44,6 @@ namespace WinFormsAppCollect
             cmbFunctionCode.SelectedIndex = 2;
             cmbFunctionCodeTCP.SelectedIndex = 2;
             cmbFunctionCodeOPC.SelectedIndex = 0;
-        }
-
-        private void SetDefaultValues()
-        {
-            txtInterval.Text = "1000";
-            txtIntervalTCP.Text = "1000";
-            txtIntervalOPC.Text = "1000";
-            txtNodeId.Text = "ns=2;s=1010";
         }
 
         private void OnLogMessage(string message)
@@ -272,17 +263,6 @@ namespace WinFormsAppCollect
             StopContinuousOpcReading();
         }
 
-        private void btnBrowseOPC_Click(object sender, EventArgs e)
-        {
-            if (!_opcService.IsConnected)
-            {
-                MessageBox.Show("请先连接OPC UA服务器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            BrowseOpcServer();
-        }
-
         // ========== 数据读取核心方法 ==========
         private void ReadRTUData()
         {
@@ -385,10 +365,7 @@ namespace WinFormsAppCollect
 
                 var result = _opcService.ReadNodeValue(nodeId);
 
-                OnLogMessage($"OPC UA节点 {nodeId} 读取成功:");
-                OnLogMessage($"  值: {result.value:F2}");
-                OnLogMessage($"  时间: {result.timestamp:yyyy-MM-dd HH:mm:ss}");
-                OnLogMessage($"  质量: {result.quality}");
+                OnLogMessage($"OPC UA节点 {nodeId} 读取成功,值: {result.value:F2},时间: {result.timestamp:yyyy-MM-dd HH:mm:ss}");
             }
             catch (Exception ex)
             {
@@ -471,9 +448,6 @@ namespace WinFormsAppCollect
             btnStartContinuousReadOPC.Enabled = false;
             btnStopContinuousReadOPC.Enabled = true;
             btnReadOPC.Enabled = false;
-
-            OnLogMessage($"OPC UA开始循环读取，间隔: {interval}ms");
-
             _opcService.StartContinuousReading(interval, nodeId);
         }
 

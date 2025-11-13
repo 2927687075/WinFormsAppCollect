@@ -55,7 +55,7 @@ namespace WinFormsAppCollect
         private Label label1, label2, label3, label4, label5;
         private Label label6, label7, label8, label9, label10;
         private Label label11, label12, label13, label14, label15;
-        private Label label16, label17, label18, label19, label20, label21;
+        private Label label16, label17, label18, label19, label20;
 
         // 在控件声明区域添加OPC UA控件
         private TabPage tabPageOPC;
@@ -69,7 +69,6 @@ namespace WinFormsAppCollect
         private Button btnReadOPC;
         private Button btnStartContinuousReadOPC;
         private Button btnStopContinuousReadOPC;
-        private ComboBox cmbFunctionCodeOPC;
 
 
 
@@ -138,8 +137,6 @@ namespace WinFormsAppCollect
             this.btnDisconnectTCP = new System.Windows.Forms.Button();
             this.tabPageOPC = new System.Windows.Forms.TabPage();
             this.groupBoxOPCData = new System.Windows.Forms.GroupBox();
-            this.label21 = new System.Windows.Forms.Label();
-            this.cmbFunctionCodeOPC = new System.Windows.Forms.ComboBox();
             this.btnStopContinuousReadOPC = new System.Windows.Forms.Button();
             this.btnStartContinuousReadOPC = new System.Windows.Forms.Button();
             this.btnReadOPC = new System.Windows.Forms.Button();
@@ -739,8 +736,6 @@ namespace WinFormsAppCollect
             // groupBoxOPCData
             // 
             this.groupBoxOPCData.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.groupBoxOPCData.Controls.Add(this.label21);
-            this.groupBoxOPCData.Controls.Add(this.cmbFunctionCodeOPC);
             this.groupBoxOPCData.Controls.Add(this.btnStopContinuousReadOPC);
             this.groupBoxOPCData.Controls.Add(this.btnStartContinuousReadOPC);
             this.groupBoxOPCData.Controls.Add(this.btnReadOPC);
@@ -755,32 +750,11 @@ namespace WinFormsAppCollect
             this.groupBoxOPCData.TabStop = false;
             this.groupBoxOPCData.Text = "数据采集";
             // 
-            // label21
-            // 
-            this.label21.Location = new System.Drawing.Point(20, 110);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(80, 20);
-            this.label21.TabIndex = 8;
-            this.label21.Text = "功能码:";
-            this.label21.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // cmbFunctionCodeOPC
-            // 
-            this.cmbFunctionCodeOPC.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbFunctionCodeOPC.Items.AddRange(new object[] {
-            "Read Value",
-            "Browse Nodes",
-            "Read Attributes"});
-            this.cmbFunctionCodeOPC.Location = new System.Drawing.Point(100, 110);
-            this.cmbFunctionCodeOPC.Name = "cmbFunctionCodeOPC";
-            this.cmbFunctionCodeOPC.Size = new System.Drawing.Size(150, 28);
-            this.cmbFunctionCodeOPC.TabIndex = 9;
-            // 
             // btnStopContinuousReadOPC
             // 
             this.btnStopContinuousReadOPC.BackColor = System.Drawing.Color.LightSalmon;
             this.btnStopContinuousReadOPC.Enabled = false;
-            this.btnStopContinuousReadOPC.Location = new System.Drawing.Point(410, 70);
+            this.btnStopContinuousReadOPC.Location = new System.Drawing.Point(387, 73);
             this.btnStopContinuousReadOPC.Name = "btnStopContinuousReadOPC";
             this.btnStopContinuousReadOPC.Size = new System.Drawing.Size(120, 30);
             this.btnStopContinuousReadOPC.TabIndex = 6;
@@ -791,7 +765,7 @@ namespace WinFormsAppCollect
             // btnStartContinuousReadOPC
             // 
             this.btnStartContinuousReadOPC.BackColor = System.Drawing.Color.LightBlue;
-            this.btnStartContinuousReadOPC.Location = new System.Drawing.Point(280, 70);
+            this.btnStartContinuousReadOPC.Location = new System.Drawing.Point(257, 73);
             this.btnStartContinuousReadOPC.Name = "btnStartContinuousReadOPC";
             this.btnStartContinuousReadOPC.Size = new System.Drawing.Size(120, 30);
             this.btnStartContinuousReadOPC.TabIndex = 5;
@@ -802,7 +776,7 @@ namespace WinFormsAppCollect
             // btnReadOPC
             // 
             this.btnReadOPC.BackColor = System.Drawing.Color.LightGoldenrodYellow;
-            this.btnReadOPC.Location = new System.Drawing.Point(190, 70);
+            this.btnReadOPC.Location = new System.Drawing.Point(167, 73);
             this.btnReadOPC.Name = "btnReadOPC";
             this.btnReadOPC.Size = new System.Drawing.Size(80, 30);
             this.btnReadOPC.TabIndex = 4;
@@ -812,7 +786,7 @@ namespace WinFormsAppCollect
             // 
             // txtIntervalOPC
             // 
-            this.txtIntervalOPC.Location = new System.Drawing.Point(120, 70);
+            this.txtIntervalOPC.Location = new System.Drawing.Point(97, 74);
             this.txtIntervalOPC.Name = "txtIntervalOPC";
             this.txtIntervalOPC.Size = new System.Drawing.Size(60, 27);
             this.txtIntervalOPC.TabIndex = 3;
@@ -820,7 +794,7 @@ namespace WinFormsAppCollect
             // 
             // label20
             // 
-            this.label20.Location = new System.Drawing.Point(20, 70);
+            this.label20.Location = new System.Drawing.Point(-3, 75);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(100, 20);
             this.label20.TabIndex = 2;
@@ -833,7 +807,7 @@ namespace WinFormsAppCollect
             this.txtNodeId.Name = "txtNodeId";
             this.txtNodeId.Size = new System.Drawing.Size(300, 27);
             this.txtNodeId.TabIndex = 1;
-            this.txtNodeId.Text = "ns=2;s=1010";
+            this.txtNodeId.Text = "ns=3;i=1004";
             // 
             // label19
             // 

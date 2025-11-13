@@ -76,7 +76,6 @@ namespace WinFormsAppCollect.Forms
             _tcpService.Disconnect();
             btnConnectTCP.Enabled = true;
             btnDisconnectTCP.Enabled = false;
-            OnLogMessage("连接已断开");
         }
 
         private void btnReadTCP_Click(object sender, EventArgs e)

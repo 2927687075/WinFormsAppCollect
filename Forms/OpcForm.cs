@@ -21,14 +21,6 @@ namespace WinFormsAppCollect.Forms
         {
             _opcService = new OpcUaService();
             _opcService.LogMessage += OnLogMessage;
-            InitializeControls();
-        }
-
-        private void InitializeControls()
-        {
-            txtIntervalOPC.Text = "1000";
-            txtServerUrl.Text = "opc.tcp://localhost:4840";
-            txtNodeId.Text = "ns=2;s=Demo.Dynamic.Scalar.Double";
         }
 
         private void OnLogMessage(string message)
@@ -70,7 +62,6 @@ namespace WinFormsAppCollect.Forms
             btnConnectOPC.Enabled = true;
             btnDisconnectOPC.Enabled = false;
             UpdateButtonStates();
-            OnLogMessage("连接已断开");
         }
 
         private void btnReadOPC_Click(object sender, EventArgs e)

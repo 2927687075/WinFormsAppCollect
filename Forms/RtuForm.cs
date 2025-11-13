@@ -84,7 +84,6 @@ namespace WinFormsAppCollect.Forms
             _rtuService.Disconnect();
             btnConnect.Enabled = true;
             btnDisconnect.Enabled = false;
-            OnLogMessage("连接已断开");
         }
 
         private void btnRead_Click(object sender, EventArgs e)

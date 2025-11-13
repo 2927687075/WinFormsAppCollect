@@ -149,6 +149,15 @@
     <Compile Include="Services\OpcUaService.cs" />
     <Compile Include="Services\ModbusTcpService.cs" />
     <Compile Include="Services\ModbusRtuService.cs" />
+    <EmbeddedResource Include="Forms\LogControl.resx">
+      <DependentUpon>LogControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\OpcForm.resx">
+      <DependentUpon>OpcForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\RtuForm.resx">
+      <DependentUpon>RtuForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\TcpForm.resx">
       <DependentUpon>TcpForm.cs</DependentUpon>
     </EmbeddedResource>

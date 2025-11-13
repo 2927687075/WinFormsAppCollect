@@ -294,7 +294,6 @@ namespace WinFormsAppCollect.Services
                     }
 
                     readCount++;
-                    OnLogMessage($"OPC UA第 {readCount} 次读取...");
 
                     var result = ReadNodeValue(nodeId);
 

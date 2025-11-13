@@ -17,13 +17,10 @@ namespace WinFormsAppCollect
         {
             // 添加互斥体以防止多重实例运行
             Mutex mutex = new Mutex(true, "WinFormsAppCollect_Unique_Mutex_Name", out bool isNewInstance);
-            if (!isNewInstance)
-            {
-                return;
-            }
+            if (!isNewInstance) return;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new MainForm());
         }
     }
 }

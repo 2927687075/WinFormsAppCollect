@@ -1,4 +1,4 @@
-modbus+opc采集客户端
+modbus采集客户端
 
 winform 4.8
 
